@@ -1,0 +1,133 @@
+# civilization_sim — default configuration
+# All parameters here can be overridden via --config on the CLI.
+# The simulation is designed to be fully parameterized: swap any value and
+# re-run to observe how outcomes change.
+
+simulation:
+  seed: 42               # RNG seed; null = random each run
+  ticks: 300             # number of simulation steps
+  output_dir: output/default
+
+population:
+  initial_size: 100
+  max_size: 1000
+  utility_fn: survival   # survival | enlightenment
+
+# ---------------------------------------------------------------------------
+# Trait initial distributions
+# Each trait: [mean, std_dev]; values are clamped to [0, 1]
+# ---------------------------------------------------------------------------
+traits:
+  cognitive:
+    curiosity:            [0.50, 0.20]
+    pattern_recognition:  [0.50, 0.20]
+    abstraction:          [0.40, 0.20]
+    memory_narrative:     [0.50, 0.20]
+
+  social:
+    social_desire:        [0.60, 0.20]
+    dominance:            [0.50, 0.20]
+    empathy:              [0.50, 0.20]
+    trust:                [0.45, 0.20]
+    conformity:           [0.50, 0.20]
+
+  survival:
+    risk_tolerance:       [0.50, 0.20]
+    aggression:           [0.45, 0.20]
+    industriousness:      [0.50, 0.20]
+    patience:             [0.50, 0.20]
+
+  unknown:
+    wonder:               [0.40, 0.20]
+    attribution_style:    [0.50, 0.25]  # 0=Modeler, 1=Attributor
+    reverence:            [0.40, 0.20]
+
+# ---------------------------------------------------------------------------
+# Trait drift
+# ---------------------------------------------------------------------------
+drift:
+  rate: 0.02             # max change per experience per tick
+  max_deviation: 0.30    # max drift of current_traits from base_traits
+  memory_size: 20        # not currently used; reserved for future decay logic
+
+# ---------------------------------------------------------------------------
+# Heritability
+# ---------------------------------------------------------------------------
+heritability:
+  variance: 0.10         # std dev of offspring trait vs parent midpoint
+
+# ---------------------------------------------------------------------------
+# Spontaneous inspiration
+# ---------------------------------------------------------------------------
+inspiration:
+  probability: 0.001     # base per-agent per-tick chance; amplified by curiosity/wonder
+
+# ---------------------------------------------------------------------------
+# Unknown Player events
+# ---------------------------------------------------------------------------
+unknown_player:
+  event_probability: 0.05   # per-tick chance of an event
+  event_types:
+    - drought
+    - flood
+    - windfall
+    - disease
+    - discovery
+
+# ---------------------------------------------------------------------------
+# Resources
+# ---------------------------------------------------------------------------
+resources:
+  initial: 10.0              # starting resources for each agent
+  initial_offspring: 5.0     # starting resources for newborns
+  survival_cost: 1.0         # resources consumed per tick
+  rest_gain: 0.3             # resources recovered by resting
+  forage_gain: [1.5, 3.5]   # [min, max] resources gained by foraging
+  reproduction_threshold: 15.0  # min resources to reproduce
+  reproduction_cost: 5.0     # resources spent by each parent
+  min_reproduction_age: 5
+  max_reproduction_age: 60
+  max_age: 80
+
+# ---------------------------------------------------------------------------
+# Social dynamics
+# ---------------------------------------------------------------------------
+social:
+  encounter_probability: 0.25     # chance of meeting a stranger per tick
+  group_formation_threshold: 0.45 # avg_social_desire × relationship_strength
+  cooperation_bonus: 0.30         # resources shared in a cooperative interaction
+
+# ---------------------------------------------------------------------------
+# Social technology emergence thresholds
+# These mirror REGISTRY in core/social_tech.py but can be tuned here.
+# (Currently the REGISTRY uses its own defaults; this section is reserved
+# for future config-driven threshold overrides.)
+# ---------------------------------------------------------------------------
+social_technologies:
+  taboo:
+    emergence: {empathy: 0.45, conformity: 0.45}
+  religion:
+    emergence: {wonder: 0.55, reverence: 0.55, attribution_style: 0.55, conformity: 0.50}
+  philosophy:
+    emergence: {curiosity: 0.60, abstraction: 0.55, pattern_recognition: 0.55}
+  economy:
+    emergence: {trust: 0.55, patience: 0.55, industriousness: 0.55}
+  governance:
+    emergence: {dominance: 0.55, social_desire: 0.60, conformity: 0.55}
+
+# ---------------------------------------------------------------------------
+# Experiment: alternate utility function (uncomment to test)
+# ---------------------------------------------------------------------------
+# population:
+#   utility_fn: enlightenment
+
+# ---------------------------------------------------------------------------
+# Experiment: aggressive population (uncomment to test)
+# ---------------------------------------------------------------------------
+# traits:
+#   survival:
+#     aggression: [0.75, 0.15]
+#     risk_tolerance: [0.70, 0.15]
+#   social:
+#     empathy: [0.25, 0.15]
+#     trust: [0.25, 0.15]

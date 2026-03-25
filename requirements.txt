@@ -1,0 +1,5 @@
+mesa>=2.3
+numpy
+pandas
+pyyaml
+networkx
