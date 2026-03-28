@@ -40,7 +40,7 @@ class UnknownPlayerEvent:
     tick:          simulation tick when the event occurred
     event_type:    category of the event
     magnitude:     scales the resource effect (drawn from [0.5, 1.5])
-    resource_delta: actual resource effect (magnitude × base_effect)
+    resource_delta: actual resource effect (magnitude * base_effect)
     description:   human-readable label for logs
     """
 
@@ -111,7 +111,7 @@ def check_spontaneous_inspiration(model) -> list[int]:
         if not agent.alive:
             continue
 
-        # Per-agent probability: base × trait amplifiers × philosophy multiplier
+        # Per-agent probability: base * trait amplifiers * philosophy multiplier
         t = agent.current_traits
         trait_mult = 1.0 + t.curiosity * 0.5 + t.wonder * 0.3
 

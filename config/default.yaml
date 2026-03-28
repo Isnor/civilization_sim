@@ -94,7 +94,7 @@ resources:
 # ---------------------------------------------------------------------------
 social:
   encounter_probability: 0.25     # chance of meeting a stranger per tick
-  group_formation_threshold: 0.45 # avg_social_desire × relationship_strength
+  group_formation_threshold: 0.45 # avg_social_desire * relationship_strength
   cooperation_bonus: 0.30         # resources shared in a cooperative interaction
 
 # ---------------------------------------------------------------------------

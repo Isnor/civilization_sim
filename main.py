@@ -116,6 +116,7 @@ def main() -> None:
     parser.add_argument("--utility", choices=["survival", "enlightenment"], default=None)
     parser.add_argument("--output", default=None)
     parser.add_argument("--quiet", action="store_true")
+    parser.add_argument("--write-output", action="store_true")
     args = parser.parse_args()
 
     config_path = Path(args.config)
@@ -140,15 +141,16 @@ def main() -> None:
     if not args.quiet:
         summarize(model)
 
-    output_dir = config["simulation"]["output_dir"]
-    model_csv, agent_csv = export_csvs(model, output_dir)
-    events_csv = export_events(model, output_dir)
+    if args.write_output:
+      output_dir = config["simulation"]["output_dir"]
+      model_csv, agent_csv = export_csvs(model, output_dir)
+      events_csv = export_events(model, output_dir)
 
-    if not args.quiet:
-        print(f"\n  Output written to: {output_dir}/")
-        print(f"    {model_csv}")
-        print(f"    {agent_csv}")
-        print(f"    {events_csv}")
+      if not args.quiet:
+          print(f"\n  Output written to: {output_dir}/")
+          print(f"    {model_csv}")
+          print(f"    {agent_csv}")
+          print(f"    {events_csv}")
 
 
 if __name__ == "__main__":

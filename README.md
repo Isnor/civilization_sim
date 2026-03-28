@@ -111,6 +111,12 @@ plt.tight_layout()
 plt.savefig("output/default/summary.png")
 ```
 
+### In Progress: Solara
+
+[Solara](https://solara.dev/) is used to create simple webapps to allow a UI to configure, run, and visualize Mesa experiments. To run this project as a Solara app, run:
+
+`solara run app.py`
+
 ---
 
 ## Core Design Decisions

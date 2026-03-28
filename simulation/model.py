@@ -44,7 +44,7 @@ class CivilizationModel(mesa.Model):
     """
 
     def __init__(self, config: dict):
-        super().__init__(seed=config["simulation"].get("seed", None))
+        super().__init__(rng=config["simulation"].get("seed", None))
         self.config = config
 
         # Group registry: group_id -> Group
@@ -205,7 +205,7 @@ class CivilizationModel(mesa.Model):
         Form new groups and update existing ones.
 
         Two agents form a group when:
-          avg(social_desire) × relationship_strength > group_formation_threshold
+          avg(social_desire) x relationship_strength > group_formation_threshold
         OR when neither has any group and both have high social_desire.
         """
         cfg = self.config["social"]

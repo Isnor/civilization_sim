@@ -1,4 +1,4 @@
-mesa>=2.3
+mesa[rec]
 numpy
 pandas
 pyyaml
