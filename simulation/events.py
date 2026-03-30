@@ -61,11 +61,10 @@ def maybe_generate_event(model) -> UnknownPlayerEvent | None:
 
     Returns an event or None based on configured probability.
     """
-    cfg = model.config["unknown_player"]
-    if model.rng.random() > cfg["event_probability"]:
+    if model.rng.random() > model.scenario.unknown_player_event_probability:
         return None
 
-    available = cfg.get("event_types", EVENT_TYPES)
+    available = model.scenario.unknown_player_event_types
     event_type = str(model.rng.choice(available))
     magnitude = float(model.rng.uniform(0.5, 1.5))
     base_effect = EVENT_RESOURCE_EFFECTS.get(event_type, 0.0)
@@ -103,8 +102,7 @@ def check_spontaneous_inspiration(model) -> list[int]:
       - agent's curiosity and wonder traits
       - active philosophy social technology (multiplier)
     """
-    cfg = model.config
-    base_prob = cfg["inspiration"]["probability"]
+    base_prob = model.scenario.inspiration_probability
     inspired_ids = []
 
     for agent in model.agents:

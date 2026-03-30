@@ -1,71 +1,56 @@
+from typing import Any, Dict
 import solara
+
 from mesa.visualization import (
-	 Slider,
-	 SolaraViz,
-	 SpaceRenderer,
-	 make_plot_component,
+    Slider,
+    SolaraViz,
+    make_plot_component,
 )
-from mesa.visualization.components import AgentPortrayalStyle
-import yaml
-from core.agent import Player
+
 from simulation.model import CivilizationModel
+from simulation.scenario import CivilizationScenario
 
-def load_config(path: str) -> dict:
-	 with open(path) as f:
-		  return yaml.safe_load(f)
 
-# write a function for AgentPortrayalStyle, or use a different method
-# def agent_portrayal(agent):
-#   pass
-
-# write a function to display information from a model of our type (solara.Markdown to display utility function, for example)
 def get_group_count(model):
-  return solara.Markdown(f"Current # Groups: {model.group_count()}")
+  return solara.Markdown(f"#Current Groups: {model.group_count()}")
 
 def get_living(model):
-  return solara.Markdown(f"Currently alive: {model.living_count()}")
+  return solara.Markdown(f"#Currently alive: {model.living_count()}")
 
-config = load_config("./config/default.yaml")
-model = CivilizationModel(config)
-# renderer = SpaceRenderer(model, backend='altair').agent_mesh # TODO: add agent_portrayal and layer function here, setup structure
-# renderer.render()
+model = CivilizationModel()
 
 def make_average_trait_plots(model:CivilizationModel)-> tuple[any, int]:
-	return [make_plot_component(average_trait_reporter, page=0, backend='altair') for average_trait_reporter in model.datacollector.model_reporters]
+    """
+    Add a basic plot for the average of each trait in the model over time.
+    """
+    return [make_plot_component(average_trait_reporter, page=0, backend='altair') for average_trait_reporter in model.datacollector.model_reporters]
+
+
+def scenario_UI(scenario: CivilizationScenario)-> Dict[str, Any]:
+    model_params_ui: Dict[str, Any] = {}
+    for config, val in scenario.to_dict().items():
+        if config != "rng" and isinstance(val, int):
+            model_params_ui[config] = Slider(label=config, value=val, max=10000, min=1, step=10)
+
+    return model_params_ui
 
 if __name__ == '__main__':
-	page = SolaraViz(
-		name='culture sim',
-		model=model,
-		# renderer=renderer,
-		components=[
-			get_group_count,
-			get_living,
-			*make_average_trait_plots(model),
-			# make_plot_component("avg_trust", page=1, backend='altair'),
-			# make_plot_component("avg_empathy", page=1, backend='altair'),
-
-		],
-		model_params={
-			'config':config,
-		},
-	)
-# main part is:
-#   model_params = create model params dict using sliders and whatnot
-#   model = create a model using params
-#   renderer = create a SpaceRenderer using the model
-#   renderer.render()
-#   create the page
-#   if __name__ == "__main__":
-#     page = SolaraViz(
-#         model,
-#         renderer,
-#         components=[
-#             StatePlot,
-#             display_model_info,
-#         ],
-#         model_params=model_params,
-#         name="Virus Model",
-#     )
-#     page  # noqa
+    fucking_god_damnit = scenario_UI(model.scenario)
+    page = SolaraViz(
+        name='culture sim',
+        model=model,
+        components=[
+            get_group_count,
+            get_living,
+            *make_average_trait_plots(model),
+        ],
+        model_params=fucking_god_damnit,
+        # TODO: in the far future, it would be neat to run a bunch of tests and create "prefab" experiments
+        # in the form of static CivilizationScenario instances that we switch on based on a drop-down
+        # model_params={
+        #     'population_initial_size': Slider("Initial Population", value=100, max=1000, min=10, step=10),
+        #     'population_max_size': Slider("Max Population", value=1000, max=10000, min=100, step=10),
+        # }
+    )
+    page
 #   this needs to be run with `solara run app.py`

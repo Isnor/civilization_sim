@@ -163,6 +163,8 @@ def spontaneous_inspiration(
     Selects 1-3 random traits and shifts them by up to `magnitude`.
     Models a sudden cognitive or philosophical leap.
     """
+    # TODO: maybe the traits chosen shouldn't be random, and should instead be weighted
+    # by their most recent action(s) and highest trait values
     arr = base.to_array()
     n_affected = rng.integers(1, 4)
     indices = rng.choice(len(arr), size=n_affected, replace=False)

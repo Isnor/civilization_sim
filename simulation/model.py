@@ -15,16 +15,16 @@ Each call to model.step() runs one tick:
 
 from __future__ import annotations
 
-from collections import defaultdict
-from typing import Any
-
 import mesa
 import numpy as np
 
 from core.agent import Player
-from core.groups import Group, RelationshipState
+from core.groups import Group
 from core.social_tech import REGISTRY, compute_group_avg_traits
-from core.traits import random_traits, TRAIT_NAMES
+from core.traits import TraitVector, random_traits
+from simulation.scenario import (
+    CivilizationScenario,
+)
 from simulation.events import (
     UnknownPlayerEvent,
     maybe_generate_event,
@@ -32,8 +32,7 @@ from simulation.events import (
     check_spontaneous_inspiration,
 )
 
-
-class CivilizationModel(mesa.Model):
+class CivilizationModel(mesa.Model[mesa.Agent, CivilizationScenario]):
     """
     The world of the civilization simulation.
 
@@ -43,9 +42,8 @@ class CivilizationModel(mesa.Model):
         Loaded from config/default.yaml (or any override config).
     """
 
-    def __init__(self, config: dict):
-        super().__init__(rng=config["simulation"].get("seed", None))
-        self.config = config
+    def __init__(self, scenario: CivilizationScenario = CivilizationScenario(), **kwargs):
+        super().__init__(scenario=scenario)
 
         # Group registry: group_id -> Group
         self.groups: dict[int, Group] = {}
@@ -93,12 +91,11 @@ class CivilizationModel(mesa.Model):
             agent.step()
 
         # 3. Trait drift
-        drift_cfg = self.config["drift"]
         for agent in self.agents:
             if agent.alive:
                 agent.apply_drift(
-                    rate=drift_cfg["rate"],
-                    max_deviation=drift_cfg["max_deviation"],
+                    rate=self.scenario.trait_drift_rate,
+                    max_deviation=self.scenario.trait_drift_max_deviation,
                 )
 
         # 4. Spontaneous inspiration
@@ -124,26 +121,35 @@ class CivilizationModel(mesa.Model):
     # ------------------------------------------------------------------
 
     def _spawn_initial_population(self) -> None:
-        cfg = self.config
-        n = cfg["population"]["initial_size"]
-        utility_fn = cfg["population"].get("utility_fn", "survival")
+        n = int(self.scenario.population_initial_size)
+        utility_fn = self.scenario.population_utility_fn
 
-        # Flatten trait distributions from config
-        dist_cfg = cfg.get("traits", {})
-        distributions: dict[str, list] = {}
-        for section in dist_cfg.values():
-            if isinstance(section, dict):
-                for trait, params in section.items():
-                    distributions[trait] = params
+        dist_cfg = dict(
+            curiosity = self.scenario.traits_curiosity,
+            pattern_recognition = self.scenario.traits_pattern_recognition,
+            abstraction = self.scenario.traits_abstraction,
+            memory_narrative = self.scenario.traits_memory_narrative,
+            social_desire = self.scenario.traits_social_desire,
+            dominance = self.scenario.traits_dominance,
+            empathy = self.scenario.traits_empathy,
+            trust = self.scenario.traits_trust,
+            conformity = self.scenario.traits_conformity,
+            risk_tolerance = self.scenario.traits_risk_tolerance,
+            aggression = self.scenario.traits_aggression,
+            industriousness = self.scenario.traits_industriousness,
+            patience = self.scenario.traits_patience,
+            wonder = self.scenario.traits_wonder,
+            attribution_style = self.scenario.traits_attribution_style,
+            reverence = self.scenario.traits_reverence,
+        )
 
         for _ in range(n):
-            traits = random_traits(distributions, self.rng)
+            traits = random_traits(dist_cfg, self.rng)
             agent = Player(self, traits, utility_fn=utility_fn)
             self.agents_by_id[agent.unique_id] = agent
 
     def _process_reproduction(self) -> None:
-        cfg = self.config
-        max_pop = cfg["population"].get("max_size", 2000)
+        max_pop = self.scenario.population_max_size
         living = [a for a in self.agents if a.alive]
 
         if len(living) >= max_pop:
@@ -208,8 +214,7 @@ class CivilizationModel(mesa.Model):
           avg(social_desire) x relationship_strength > group_formation_threshold
         OR when neither has any group and both have high social_desire.
         """
-        cfg = self.config["social"]
-        threshold = cfg["group_formation_threshold"]
+        threshold = self.scenario.social_group_formation_threshold
         living = [a for a in self.agents if a.alive]
 
         # Evaluate pairwise relationships for group formation

@@ -4,8 +4,8 @@
 # re-run to observe how outcomes change.
 
 simulation:
-  seed: 42               # RNG seed; null = random each run
-  ticks: 300             # number of simulation steps
+  rng: 42               # RNG seed; null = random each run
+  ticks: 300            # number of simulation steps
   output_dir: output/default
 
 population:

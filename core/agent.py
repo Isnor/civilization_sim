@@ -28,12 +28,12 @@ import numpy as np
 from core.traits import TraitVector, inherit_traits, drift_traits, spontaneous_inspiration
 from core.beliefs import BeliefSystem
 from core.groups import RelationshipState
-
+from simulation.scenario import CivilizationScenario
 
 ACTIONS = ["forage", "rest", "socialize", "compete", "contemplate"]
 
 
-class Player(mesa.Agent):
+class Player(mesa.Agent[mesa.Model[mesa.Agent, CivilizationScenario]]):
     """
     A single agent (human) in the civilization simulation.
 
@@ -69,10 +69,12 @@ class Player(mesa.Agent):
         self.relationships: dict[int, RelationshipState] = {}
 
         # Experience log: list of (trait_name, delta) tuples accumulated this tick-cycle
+        # TODO: this 16 is hard-coded, tightly coupled to the number of traits
         self._experience_deltas: np.ndarray = np.zeros(16, dtype=float)
         self._experience_count: int = 0
 
-        self.resources: float = model.config["resources"]["initial"]
+        # TODO: add variance, based on parents' resources?
+        self.resources: float = self.model.scenario.resources_initial
         self.age: int = 0
         self.alive: bool = True
 
@@ -90,8 +92,7 @@ class Player(mesa.Agent):
         if not self.alive:
             return
 
-        cfg = self.model.config
-        survival_cost = cfg["resources"]["survival_cost"]
+        survival_cost = self.model.scenario.resources_survival_cost
 
         # Pay survival cost
         self.resources -= survival_cost
@@ -102,7 +103,7 @@ class Player(mesa.Agent):
             self.last_action = "died_starvation"
             return
 
-        max_age = cfg["resources"].get("max_age", 80)
+        max_age = self.model.scenario.resources_max_age
         if self.age >= max_age:
             self.alive = False
             self.last_action = "died_age"
@@ -129,6 +130,7 @@ class Player(mesa.Agent):
         toward contemplate/socialize.
         """
         t = self.current_traits
+        
         in_grp_agg = effects.get("in_group_aggression_mult", 1.0)
 
         # Base weights
@@ -138,6 +140,7 @@ class Player(mesa.Agent):
         w_compete = (0.10 + t.aggression * 0.20 - t.empathy * 0.05) * in_grp_agg
         w_contemplate = 0.05 + t.wonder * 0.15 + t.curiosity * 0.10
 
+        # TODO: utility functions should be more configurable; add action weights to scenario, or store as object and switch on strings?
         if self.utility_fn == "enlightenment":
             w_forage *= 0.6
             w_compete *= 0.4
@@ -153,18 +156,17 @@ class Player(mesa.Agent):
     # ------------------------------------------------------------------
 
     def _execute_action(self, action: str, effects: dict) -> None:
-        cfg = self.model.config
         rng = self.model.rng
 
         if action == "forage":
-            lo, hi = cfg["resources"]["forage_gain"]
+            lo, hi = self.model.scenario.resources_forage_gain
             gain = rng.uniform(lo, hi) * effects.get("forage_gain_mult", 1.0)
             self.resources += gain
             self._record_experience("industriousness", +0.3)
             self._record_experience("patience", +0.1)
 
         elif action == "rest":
-            self.resources += cfg["resources"].get("rest_gain", 0.3)
+            self.resources += self.model.scenario.resources_rest_gain
 
         elif action == "socialize":
             self._do_socialize(effects)
@@ -196,7 +198,7 @@ class Player(mesa.Agent):
 
         # Cooperate or exchange beliefs
         outcome = "cooperative"
-        bonus = self.model.config["social"].get("cooperation_bonus", 0.2)
+        bonus = self.model.scenario.social_cooperation_bonus
         bonus *= effects.get("cooperation_bonus_mult", 1.0)
         self.resources += bonus
         target.resources += bonus
@@ -292,7 +294,7 @@ class Player(mesa.Agent):
         t = self.current_traits
 
         known = list(self.relationships.keys())
-        encounter_prob = self.model.config["social"]["encounter_probability"]
+        encounter_prob = self.model.scenario.social_encounter_probability
 
         # Sometimes meet a stranger
         if not known or rng.random() < encounter_prob * t.social_desire:
@@ -361,12 +363,11 @@ class Player(mesa.Agent):
     # ------------------------------------------------------------------
 
     def can_reproduce(self) -> bool:
-        cfg = self.model.config["resources"]
         return (
             self.alive
-            and self.resources >= cfg["reproduction_threshold"]
-            and self.age >= cfg.get("min_reproduction_age", 5)
-            and self.age <= cfg.get("max_reproduction_age", 60)
+            and self.resources >= self.model.scenario.resources_reproduction_threshold
+            and self.age >= self.model.scenario.resources_min_reproduction_age
+            and self.age <= self.model.scenario.resources_max_reproduction_age
         )
 
     def reproduce_with(self, partner: Player) -> Player:
@@ -374,9 +375,8 @@ class Player(mesa.Agent):
         Create an offspring agent. Consumes resources from both parents.
         Offspring inherits base_traits from parents with variance.
         """
-        cfg = self.model.config
-        cost = cfg["resources"]["reproduction_cost"]
-        variance = cfg["heritability"]["variance"]
+        cost = self.model.scenario.resources_reproduction_cost
+        variance = self.model.scenario.heritability_variance
 
         self.resources -= cost
         partner.resources -= cost
@@ -386,17 +386,20 @@ class Player(mesa.Agent):
         )
 
         # Small chance of spontaneous inspiration at birth
-        insp_prob = cfg["inspiration"]["probability"]
+        insp_prob = self.model.scenario.inspiration_probability
         if self.model.rng.random() < insp_prob * 5:  # higher at birth
+            # TODO: what is this magic .15 'magnitude'?
             offspring_traits = spontaneous_inspiration(offspring_traits, 0.15, self.model.rng)
 
+        # TODO: sub-agent?
+        # TODO: network/graph for visualization?
         child = Player(
             model=self.model,
             base_traits=offspring_traits,
             utility_fn=self.utility_fn,
             parent_ids=(self.unique_id, partner.unique_id),
         )
-        child.resources = cfg["resources"].get("initial_offspring", cfg["resources"]["initial"] * 0.5)
+        child.resources = self.model.scenario.resources_initial_offspring
         return child
 
     # ------------------------------------------------------------------
