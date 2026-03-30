@@ -23,19 +23,22 @@ def make_average_trait_plots(model:CivilizationModel)-> tuple[any, int]:
     """
     Add a basic plot for the average of each trait in the model over time.
     """
-    return [make_plot_component(average_trait_reporter, page=0, backend='altair') for average_trait_reporter in model.datacollector.model_reporters]
+    ignore_traits = ["avg_attribution_style"]
+    return [make_plot_component(average_trait_reporter, page=0, backend='altair')
+        for average_trait_reporter in model.datacollector.model_reporters if average_trait_reporter not in ignore_traits]
 
 
 def scenario_UI(scenario: CivilizationScenario)-> Dict[str, Any]:
     model_params_ui: Dict[str, Any] = {}
+    attrs_to_ignore = ["rng", "_scenario_id"]
     for config, val in scenario.to_dict().items():
-        if config != "rng" and isinstance(val, int):
-            model_params_ui[config] = Slider(label=config, value=val, max=10000, min=1, step=10)
+        if config not in attrs_to_ignore and (isinstance(val, int) or isinstance(val, float)):
+            model_params_ui[config] = Slider(label=config, value=val, max=30*val, min=0, step=val/10)
 
     return model_params_ui
 
 if __name__ == '__main__':
-    fucking_god_damnit = scenario_UI(model.scenario)
+    scenario_params = scenario_UI(model.scenario)
     page = SolaraViz(
         name='culture sim',
         model=model,
@@ -44,7 +47,7 @@ if __name__ == '__main__':
             get_living,
             *make_average_trait_plots(model),
         ],
-        model_params=fucking_god_damnit,
+        model_params=scenario_params,
         # TODO: in the far future, it would be neat to run a bunch of tests and create "prefab" experiments
         # in the form of static CivilizationScenario instances that we switch on based on a drop-down
         # model_params={

@@ -3,7 +3,7 @@ Scenario for the CivilizationModel.
 
 """
 
-from typing import Dict, List
+from typing import List
 from mesa.experimental.scenarios import Scenario
 from simulation.events import (
     EVENT_TYPES,
@@ -15,7 +15,7 @@ class CivilizationScenario(Scenario):
     population_max_size: int = 1000
     population_utility_fn: str = "survival"
 
-    # resources 
+    # resources
     resources_initial:float = 10.0              # starting resources for each agent
     resources_initial_offspring:float = 5.0     # starting resources for newborns
     resources_survival_cost:float = 1.0         # resources consumed per tick
@@ -31,20 +31,20 @@ class CivilizationScenario(Scenario):
     # trait values themselves are clamped to [0, 1]
     traits_curiosity: tuple[float, float] = (.5, .2)
     traits_pattern_recognition: tuple[float, float] = (.5, .2)
-    traits_abstraction: tuple[float, float] = (.5, .2)
+    traits_abstraction: tuple[float, float] = (.4, .2)
     traits_memory_narrative: tuple[float, float] = (.5, .2)
-    traits_social_desire: tuple[float, float] = (.5, .2)
+    traits_social_desire: tuple[float, float] = (.6, .2)
     traits_dominance: tuple[float, float] = (.5, .2)
     traits_empathy: tuple[float, float] = (.5, .2)
-    traits_trust: tuple[float, float] = (.5, .2)
+    traits_trust: tuple[float, float] = (.45, .2)
     traits_conformity: tuple[float, float] = (.5, .2)
     traits_risk_tolerance: tuple[float, float] = (.5, .2)
-    traits_aggression: tuple[float, float] = (.5, .2)
+    traits_aggression: tuple[float, float] = (.45, .2)
     traits_industriousness: tuple[float, float] = (.5, .2)
     traits_patience: tuple[float, float] = (.5, .2)
-    traits_wonder: tuple[float, float] = (.5, .2)
-    traits_attribution_style: tuple[float, float] = (.5, .2)
-    traits_reverence: tuple[float, float] = (.5, .2)
+    traits_wonder: tuple[float, float] = (.4, .2)
+    traits_attribution_style: tuple[float, float] = (.5, .25)
+    traits_reverence: tuple[float, float] = (.4, .2)
 
     # trait drift / growth
     trait_drift_rate: float = .02
