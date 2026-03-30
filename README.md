@@ -38,7 +38,13 @@ pip install -r requirements.txt
 
 ## Usage
 
-### Run with defaults
+### Live Dashboard
+
+[Solara](https://solara.dev/) is used to create a simple webapp to configure, run, and visualize different Civilization experiments. To run this project as a Solara app, run:
+
+`solara run app.py`
+
+### CLI
 
 ```bash
 python main.py
@@ -128,7 +134,7 @@ The simulation does not have "priest," "warrior," or "philosopher" agent types. 
 
 The same underlying mechanics, different initial conditions, radically different historical outcomes. This is intentional - it means adding a new "type" is just finding a new region of trait space.
 
-All 16 traits are represented as floats in [0, 1]. 
+All 16 traits are represented as floats in [0, 1].
 
 | Category | Trait | What it drives |
 |---|---|---|
@@ -213,7 +219,7 @@ Run `--ticks 1000` and watch for collapses. What trait distributions tend to pre
 
 ## Theoretical Foundations
 
-The simulation is built on a set of ideas from evolutionary game theory, social science, and philosophy, none of which I have formal education on.  
+The simulation is built on a set of ideas from evolutionary game theory, social science, and philosophy, none of which I have formal education on.
 
 ### Evolutionary Game Theory
 
