@@ -17,6 +17,7 @@ def population_summary(model):
 
   return solara.Markdown(f"#Current Groups: {model.group_count()}\n#Alive: {model.living_count()}")
 
+
 def attribution_average_summary(model):
     """Summary of the civilization's "attribution" percentages.
     """
@@ -26,6 +27,7 @@ def attribution_average_summary(model):
     solara.Markdown(f"#Attributors: {attributor_fraction:.2f}%\n#Modelers: {modeler_fraction:.2f}%\n#Indifferent: {indifferent_fraction:.2f}%"),
     return
 
+
 def make_average_trait_plots(model:CivilizationModel)-> tuple[any, int]:
     """
     Add a basic plot for the average of each trait in the model over time.
@@ -34,7 +36,10 @@ def make_average_trait_plots(model:CivilizationModel)-> tuple[any, int]:
     return [make_plot_component(average_trait_reporter, page=0, backend='altair')
         for average_trait_reporter in model.datacollector.model_reporters if average_trait_reporter not in ignore_traits]
 
+
 def scenario_UI(scenario: CivilizationScenario)-> Dict[str, Any]:
+    """Add the UI controls (sliders) for the model
+    """
     model_params_ui: Dict[str, Any] = {}
     attrs_to_ignore = ["rng", "_scenario_id"]
     for config, val in scenario.to_dict().items():

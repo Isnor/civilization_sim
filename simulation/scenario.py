@@ -64,3 +64,7 @@ class CivilizationScenario(Scenario):
     # unknown_player events
     unknown_player_event_probability: float = .01
     unknown_player_event_types: List[str] = EVENT_TYPES
+
+    # TODO: add end conditions beyond just number of ticks/years. maybe we should stop after
+    # the population hits max_size, a certain social technology is achieved, or some other arbitrary
+    # condition of an experiment so we can run hundreds of them and look for patterns
