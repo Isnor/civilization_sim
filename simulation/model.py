@@ -21,7 +21,7 @@ import numpy as np
 from core.agent import Player
 from core.groups import Group
 from core.social_tech import REGISTRY, compute_group_avg_traits
-from core.traits import TraitVector, random_traits
+from core.traits import random_traits
 from simulation.scenario import (
     CivilizationScenario,
 )
@@ -33,13 +33,12 @@ from simulation.events import (
 )
 
 class CivilizationModel(mesa.Model[mesa.Agent, CivilizationScenario]):
-    """
-    The world of the civilization simulation.
+    """A model to describe development of human cultures.
 
     Parameters
     ----------
-    config : dict
-        Loaded from config/default.yaml (or any override config).
+    scenario: scenario.CivilizationScenario
+        A specific set of configuration values, i.e. a specific scenario. See :class:`simulation.scenario.CivilizationScenario` for defaults
     """
 
     def __init__(self, scenario: CivilizationScenario = CivilizationScenario(), **kwargs):

@@ -9,8 +9,7 @@ Each agent carries two vectors:
 
 from __future__ import annotations
 
-import math
-from dataclasses import dataclass, fields, astuple
+from dataclasses import dataclass, astuple
 from typing import TYPE_CHECKING
 
 import numpy as np
