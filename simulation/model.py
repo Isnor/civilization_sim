@@ -14,6 +14,7 @@ Each call to model.step() runs one tick:
 """
 
 from __future__ import annotations
+from typing import Callable, Dict
 
 import mesa
 import numpy as np
@@ -301,6 +302,12 @@ class CivilizationModel(mesa.Model[mesa.Agent, CivilizationScenario]):
                         for agent in member_agents:
                             agent.beliefs.accept_norm(norm_label)
 
+    def _check_end_conditions(self) -> None:
+        for endgame in self.scenario.endgames:
+            if END_GAME_CONDITIONS[endgame](self):
+                self.running = False
+                break
+
     # ------------------------------------------------------------------
     # Reporting helpers (used by DataCollector)
     # ------------------------------------------------------------------
@@ -342,3 +349,19 @@ class CivilizationModel(mesa.Model[mesa.Agent, CivilizationScenario]):
             )
         )
         return count / len(living)
+
+
+def max_population_endgame(model: CivilizationModel)-> bool:
+    return model.living_count() >= model.scenario.population_max_size
+
+def all_humans_dead_endgame(model: CivilizationModel)-> bool:
+    return model.living_count() <= 0
+
+def max_ticks_endgame(model: CivilizationModel)-> bool:
+    pass
+
+END_GAME_CONDITIONS: Dict[str, Callable[[CivilizationModel], bool]] = {
+    'max_population': max_population_endgame,
+    'all_humans_dead': all_humans_dead_endgame,
+    'max_ticks': max_ticks_endgame,
+}

@@ -9,6 +9,11 @@ from simulation.events import (
     EVENT_TYPES,
 )
 
+# TODO: add "social tech achieved"
+END_GAMES: List[str] = ['max_population', 'all_humans_dead', 'max_ticks']
+
+# TODO: it'd be kind of neat to put annotations on the fields to map them to UI bits;
+#  e.g. the different solara UI components that are used for configuring runs
 class CivilizationScenario(Scenario):
     # population
     population_initial_size: int = 100
@@ -65,6 +70,7 @@ class CivilizationScenario(Scenario):
     unknown_player_event_probability: float = .01
     unknown_player_event_types: List[str] = EVENT_TYPES
 
-    # TODO: add end conditions beyond just number of ticks/years. maybe we should stop after
-    # the population hits max_size, a certain social technology is achieved, or some other arbitrary
-    # condition of an experiment so we can run hundreds of them and look for patterns
+    # endgames
+    endgames: List[str] = END_GAMES
+    endgames_max_ticks: int = 1000
+
