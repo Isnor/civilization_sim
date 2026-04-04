@@ -14,6 +14,7 @@ Each call to model.step() runs one tick:
 """
 
 from __future__ import annotations
+from typing import Callable, Dict
 
 import mesa
 import numpy as np
@@ -32,6 +33,7 @@ from simulation.events import (
     check_spontaneous_inspiration,
 )
 
+
 class CivilizationModel(mesa.Model[mesa.Agent, CivilizationScenario]):
     """A model to describe development of human cultures.
 
@@ -47,6 +49,9 @@ class CivilizationModel(mesa.Model[mesa.Agent, CivilizationScenario]):
         # Group registry: group_id -> Group
         self.groups: dict[int, Group] = {}
         self._next_group_id: int = 0
+
+        # The endgame that was reached.
+        self._endgame_condition_met: str = None
 
         # Recent Unknown Player events (last tick); agents read this in contemplate
         self.recent_unknown_events: list[UnknownPlayerEvent] = []
@@ -114,6 +119,9 @@ class CivilizationModel(mesa.Model[mesa.Agent, CivilizationScenario]):
 
         # 9. Collect data
         self.datacollector.collect(self)
+
+        # 10. Check endgame conditions
+        self._check_end_conditions()
 
     # ------------------------------------------------------------------
     # Population management
@@ -301,6 +309,16 @@ class CivilizationModel(mesa.Model[mesa.Agent, CivilizationScenario]):
                         for agent in member_agents:
                             agent.beliefs.accept_norm(norm_label)
 
+    def _check_end_conditions(self) -> None:
+        if self.running:
+            for endgame in self.scenario.endgames:
+                if END_GAME_CONDITIONS[endgame](self):
+                    print(f'finished game: {endgame}')
+                    self.running = False
+                    if not self._endgame_condition_met:
+                        self._endgame_condition_met = endgame
+                    break
+
     # ------------------------------------------------------------------
     # Reporting helpers (used by DataCollector)
     # ------------------------------------------------------------------
@@ -342,3 +360,19 @@ class CivilizationModel(mesa.Model[mesa.Agent, CivilizationScenario]):
             )
         )
         return count / len(living)
+
+
+def max_population_endgame(model: CivilizationModel)-> bool:
+    return model.living_count() >= model.scenario.population_max_size
+
+def all_humans_dead_endgame(model: CivilizationModel)-> bool:
+    return model.living_count() <= 0
+
+def max_ticks_endgame(model: CivilizationModel)-> bool:
+    return model.steps >= model.scenario.endgames_max_steps
+
+END_GAME_CONDITIONS: Dict[str, Callable[[CivilizationModel], bool]] = {
+    'max_population': max_population_endgame,
+    'all_humans_dead': all_humans_dead_endgame,
+    'max_ticks': max_ticks_endgame,
+}
