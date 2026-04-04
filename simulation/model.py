@@ -116,6 +116,9 @@ class CivilizationModel(mesa.Model[mesa.Agent, CivilizationScenario]):
         # 9. Collect data
         self.datacollector.collect(self)
 
+        # 10. Check endgame conditions
+        self._check_end_conditions()
+
     # ------------------------------------------------------------------
     # Population management
     # ------------------------------------------------------------------
@@ -305,6 +308,7 @@ class CivilizationModel(mesa.Model[mesa.Agent, CivilizationScenario]):
     def _check_end_conditions(self) -> None:
         for endgame in self.scenario.endgames:
             if END_GAME_CONDITIONS[endgame](self):
+                print(f'finished game: {endgame}')
                 self.running = False
                 break
 
@@ -358,7 +362,7 @@ def all_humans_dead_endgame(model: CivilizationModel)-> bool:
     return model.living_count() <= 0
 
 def max_ticks_endgame(model: CivilizationModel)-> bool:
-    pass
+    return model.steps >= model.scenario.endgames_max_steps
 
 END_GAME_CONDITIONS: Dict[str, Callable[[CivilizationModel], bool]] = {
     'max_population': max_population_endgame,

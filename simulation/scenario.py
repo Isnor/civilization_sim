@@ -72,5 +72,5 @@ class CivilizationScenario(Scenario):
 
     # endgames
     endgames: List[str] = END_GAMES
-    endgames_max_ticks: int = 1000
+    endgames_max_steps: int = 1000
 

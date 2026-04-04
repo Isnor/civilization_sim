@@ -1,12 +1,9 @@
-import time
-from typing import Any
 import solara
-
+from solara.lab import task
 from simulation.scenario import CivilizationScenario
 from simulation.model import CivilizationModel
-import seaborn as sns
+# import seaborn as sns
 from pprint import pformat
-import solara
 
 
 @solara.component
@@ -90,52 +87,65 @@ def ScenarioUI():
         TupleSlider(f"{p} (avg, std_dev)", aggression, set_aggression, x_label='average', y_label='std_dev')
 
 
+@task
+def run_model():
+    model.value.run_model()
+
+
+def stop_model():
+    model.value.running = False
+
+
 @solara.component
 def Page():
-    steps, set_steps = solara.use_state(0)
 
     def reset_model():
-        set_steps(0)
         scenario.set(CivilizationScenario(**scenario_params.value))
         model.set(CivilizationModel(scenario=scenario.value))
 
     with solara.Sidebar():
 
         solara.Button(
-            "Step",
-            on_click=lambda: (
-                model.value.step(),
-                set_steps(model.value.steps + 1),
-            ),
+            "Init Model",
+            on_click=reset_model,
+            disabled=run_model.pending,
+            icon_name="mdi-restart-alert" if not run_model.pending else "mdi-restart-off"
         )
 
-        solara.Button("Reset", on_click=reset_model)
+        solara.Button(
+            "Run Model",
+            on_click=run_model,
+            disabled=run_model.pending,
+            icon_name="mdi-play"
+        )
+
+        solara.Button(
+            "Stop Model",
+            on_click=stop_model,
+            disabled=not run_model.pending,
+            icon_name="mdi-stop"
+        )
 
         ScenarioUI()
-        # running model in background slightly more difficult than it seems
-        # solara.Button(
-        #     "Step 100",
-        #     on_click=lambda: (
-        #         [model.value.step() and time.sleep(1) for i in range(0, 100)]
-        #     ),
-        # )
     with solara.Column():
         with solara.Row():
-            solara.Markdown(f"#Steps: {steps}")
+            solara.Markdown(f"#Steps: {model.value.steps}")
             population_summary(model.value)
             attribution_average_summary(model.value)
             with solara.Card("config"):
                 solara.Markdown(pformat(scenario_params.value, indent=2, width=40, sort_dicts=True))
         with solara.Row():
             solara.CrossFilterDataFrame(model.value.datacollector.get_model_vars_dataframe())
-        with solara.Row():
-            agent_data = model.value.datacollector.get_agent_vars_dataframe()
-            f = sns.relplot(
-                data=agent_data,
-                x="age",
-                y="empathy",
-            )
-            solara.FigureMatplotlib(f, dependencies=agent_data)
-            solara.DataFrame(agent_data)
+        # with solara.Row():
+        #     agent_data = model.value.datacollector.get_agent_vars_dataframe()
+        #     # TODO: we'll probably use altair to chart while the model is running, but seaborne will help
+        #     # us make nice looking charts after the model has finished
+        #     f = sns.relplot(
+        #         data=agent_data,
+        #         y="empathy",
+        #         x="age",
+        #     )
+        #     solara.FigureMatplotlib(f, dependencies=agent_data)
+        #     solara.DataFrame(agent_data)
         with solara.Row():
             solara.Markdown("#Spacing")
