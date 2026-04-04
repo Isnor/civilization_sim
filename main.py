@@ -27,6 +27,7 @@ import yaml
 
 from simulation.model import CivilizationModel
 from analysis.collectors import export_csvs, export_events
+from simulation.scenario import CivilizationScenario
 
 
 def load_config(path: str) -> dict:
@@ -36,19 +37,19 @@ def load_config(path: str) -> dict:
 
 def apply_overrides(config: dict, args: argparse.Namespace) -> dict:
     if args.ticks is not None:
-        config["simulation"]["ticks"] = args.ticks
+        config["endgames_max_steps"] = args.ticks
     if args.seed is not None:
-        config["simulation"]["seed"] = args.seed if args.seed != 0 else None
+        config["rng"] = args.seed if args.seed != 0 else None
     if args.utility is not None:
-        config["population"]["utility_fn"] = args.utility
+        config["population_utility_fn"] = args.utility
     if args.output is not None:
-        config["simulation"]["output_dir"] = args.output
+        config["output_dir"] = args.output
     return config
 
 
 def run(config: dict, quiet: bool = False) -> CivilizationModel:
-    ticks = config["simulation"]["ticks"]
-    model = CivilizationModel(config)
+    ticks = config["endgames_max_steps"]
+    model = CivilizationModel(CivilizationScenario(**config))
 
     start = time.time()
     for tick in range(ticks):
@@ -66,9 +67,9 @@ def run(config: dict, quiet: bool = False) -> CivilizationModel:
                 flush=True,
             )
 
-        if model.living_count() == 0:
+        if not model.running:
             if not quiet:
-                print(f"\n  [!] All agents died at tick {tick}.")
+                print(f"\n  [!] Simulation finished: {model._endgame_condition_met}.")
             break
 
     if not quiet:
@@ -130,10 +131,10 @@ def main() -> None:
     if not args.quiet:
         print(f"civilization_sim")
         print(f"  config   : {config_path}")
-        print(f"  ticks    : {config['simulation']['ticks']}")
-        print(f"  pop      : {config['population']['initial_size']}")
-        print(f"  utility  : {config['population']['utility_fn']}")
-        print(f"  seed     : {config['simulation'].get('seed', 'random')}")
+        print(f"  ticks    : {config['endgames_max_steps']}")
+        print(f"  pop      : {config['population_initial_size']}")
+        print(f"  utility  : {config['population_utility_fn']}")
+        print(f"  seed     : {config.get('rng', 'random')}")
         print()
 
     model = run(config, quiet=args.quiet)
@@ -142,7 +143,7 @@ def main() -> None:
         summarize(model)
 
     if args.write_output:
-      output_dir = config["simulation"]["output_dir"]
+      output_dir = config["output_dir"]
       model_csv, agent_csv = export_csvs(model, output_dir)
       events_csv = export_events(model, output_dir)
 

@@ -9,8 +9,10 @@ from simulation.events import (
     EVENT_TYPES,
 )
 
+
 # TODO: add "social tech achieved"
 END_GAMES: List[str] = ['max_population', 'all_humans_dead', 'max_ticks']
+
 
 # TODO: it'd be kind of neat to put annotations on the fields to map them to UI bits;
 #  e.g. the different solara UI components that are used for configuring runs
