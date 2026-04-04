@@ -33,6 +33,7 @@ from simulation.events import (
     check_spontaneous_inspiration,
 )
 
+
 class CivilizationModel(mesa.Model[mesa.Agent, CivilizationScenario]):
     """A model to describe development of human cultures.
 
@@ -48,6 +49,9 @@ class CivilizationModel(mesa.Model[mesa.Agent, CivilizationScenario]):
         # Group registry: group_id -> Group
         self.groups: dict[int, Group] = {}
         self._next_group_id: int = 0
+
+        # The endgame that was reached.
+        self._endgame_condition_met: str = None
 
         # Recent Unknown Player events (last tick); agents read this in contemplate
         self.recent_unknown_events: list[UnknownPlayerEvent] = []
@@ -306,11 +310,14 @@ class CivilizationModel(mesa.Model[mesa.Agent, CivilizationScenario]):
                             agent.beliefs.accept_norm(norm_label)
 
     def _check_end_conditions(self) -> None:
-        for endgame in self.scenario.endgames:
-            if END_GAME_CONDITIONS[endgame](self):
-                print(f'finished game: {endgame}')
-                self.running = False
-                break
+        if self.running:
+            for endgame in self.scenario.endgames:
+                if END_GAME_CONDITIONS[endgame](self):
+                    print(f'finished game: {endgame}')
+                    self.running = False
+                    if not self._endgame_condition_met:
+                        self._endgame_condition_met = endgame
+                    break
 
     # ------------------------------------------------------------------
     # Reporting helpers (used by DataCollector)

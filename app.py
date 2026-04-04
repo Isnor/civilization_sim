@@ -1,5 +1,6 @@
 import solara
 from solara.lab import task
+import solara.lab
 from simulation.scenario import CivilizationScenario
 from simulation.model import CivilizationModel
 # import seaborn as sns
@@ -11,7 +12,7 @@ def population_summary(model):
   """Summary of the civilization population in its current state
   """
 
-  return solara.Markdown(f"#Current Groups: {model.group_count()}\n#Alive: {model.living_count()}")
+  return solara.Markdown(f"#Current Groups: {model.value.group_count()}\n#Alive: {model.value.living_count()}")
 
 
 @solara.component
@@ -23,16 +24,6 @@ def attribution_average_summary(model):
     indifferent_fraction = 100 - attributor_fraction - modeler_fraction
     solara.Markdown(f"#Attributors: {attributor_fraction:.2f}%\n#Modelers: {modeler_fraction:.2f}%\n#Indifferent: {indifferent_fraction:.2f}%"),
     return
-
-
-# @solara.component
-# def make_average_trait_plots(model:CivilizationModel)-> tuple[any, int]:
-#     """
-#     Add a basic plot for the average of each trait in the model over time.
-#     """
-#     ignore_traits = ["avg_attribution_style", "groups"]
-#     return [make_plot_component(average_trait_reporter, page=0, backend='altair')
-#         for average_trait_reporter in model.datacollector.model_reporters if average_trait_reporter not in ignore_traits]
 
 
 @solara.component
@@ -69,16 +60,31 @@ def TupleSlider(label, value, on_change, **kwargs):
 
 scenario = solara.reactive(CivilizationScenario())
 model = solara.reactive(CivilizationModel(scenario=scenario.value))
-_scenario_defaults = scenario.value.to_dict()
+_scenario_defaults = {k: v for k, v in scenario.value.to_dict().items() if k not in ['rng', 'model', '_scenario_id']}
 scenario_params = solara.reactive(_scenario_defaults)
+run_history = solara.reactive({})
+
+# map of scenario attributes to solara slider arguments
+scene_slider_args = {
+    'population_initial_size': {
+        'min':10,
+        'max':100,
+        'step':10
+    },
+    'population_max_size': {
+        'min':10,
+        'max':10000,
+        'step':10
+    },
+}
 
 # we're going to try to make a component for the scenario controls
 @solara.component
 def ScenarioUI():
-    for p in ["population_initial_size", "population_max_size", "resources_initial"]:
+
+    for p, p_args in scene_slider_args.items():
         param, set_param = solara.use_state(_scenario_defaults[p]) # noqa: SH103
-        # int_sliders[p] = (param, set_param)
-        solara.SliderInt(p, value=param, on_value=set_param)
+        solara.SliderInt(p, value=param, on_value=set_param, **p_args)
         scenario_params.value[p] = param
 
     for p in [k for k in _scenario_defaults.keys() if k.startswith('traits_')]:
@@ -89,7 +95,14 @@ def ScenarioUI():
 
 @task
 def run_model():
-    model.value.run_model()
+    m = model.value
+    m.run_model()
+    print(f'houston, we have finished a run {m._scenario._scenario_id}')
+    run_history.value[m.scenario._scenario_id] = dict(
+        agents=m.datacollector.get_agent_vars_dataframe(),
+        model=m.datacollector.get_model_vars_dataframe(),
+    )
+    return m
 
 
 def stop_model():
@@ -103,8 +116,7 @@ def Page():
         scenario.set(CivilizationScenario(**scenario_params.value))
         model.set(CivilizationModel(scenario=scenario.value))
 
-    with solara.Sidebar():
-
+    with solara.AppBar():
         solara.Button(
             "Init Model",
             on_click=reset_model,
@@ -126,26 +138,30 @@ def Page():
             icon_name="mdi-stop"
         )
 
+    with solara.Row():
+            solara.ProgressLinear(run_model.progress if run_model.pending else False)
+
+    with solara.Sidebar():
+        solara.Markdown("#Scenario Parameters")
         ScenarioUI()
+
     with solara.Column():
         with solara.Row():
-            solara.Markdown(f"#Steps: {model.value.steps}")
-            population_summary(model.value)
-            attribution_average_summary(model.value)
+            with solara.lab.Tabs(color='primary', dark=True):
+                with solara.lab.Tab("Results", icon_name="mdi-chart-bar"):
+                    solara.Markdown(f"#Steps: {model.value.steps}")
+                    population_summary(model)
+                    attribution_average_summary(model.value)
+                    solara.Markdown(f"#Endgame Reached: {model.value._endgame_condition_met or "False"}")
+
+                for run_id, data in run_history.value.items():
+                    with solara.lab.Tab(f"Run {run_id}", icon_name="mdi-chart-line"):
+                        with solara.lab.Tabs(vertical=True):
+                            with solara.lab.Tab("Model", icon_name="mdi-account"):
+                                solara.DataFrame(data['model'])
+                            with solara.lab.Tab("Agents", icon_name="mdi-access-point"):
+                                solara.DataFrame(data['agents'])
             with solara.Card("config"):
-                solara.Markdown(pformat(scenario_params.value, indent=2, width=40, sort_dicts=True))
-        with solara.Row():
-            solara.CrossFilterDataFrame(model.value.datacollector.get_model_vars_dataframe())
-        # with solara.Row():
-        #     agent_data = model.value.datacollector.get_agent_vars_dataframe()
-        #     # TODO: we'll probably use altair to chart while the model is running, but seaborne will help
-        #     # us make nice looking charts after the model has finished
-        #     f = sns.relplot(
-        #         data=agent_data,
-        #         y="empathy",
-        #         x="age",
-        #     )
-        #     solara.FigureMatplotlib(f, dependencies=agent_data)
-        #     solara.DataFrame(agent_data)
+                solara.Markdown(f'```{pformat(scenario_params.value, indent=2, width=40, sort_dicts=True)}```')
         with solara.Row():
             solara.Markdown("#Spacing")
