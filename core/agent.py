@@ -130,7 +130,7 @@ class Player(mesa.Agent[mesa.Model[mesa.Agent, CivilizationScenario]]):
         toward contemplate/socialize.
         """
         t = self.current_traits
-        
+
         in_grp_agg = effects.get("in_group_aggression_mult", 1.0)
 
         # Base weights

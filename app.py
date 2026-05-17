@@ -1,9 +1,12 @@
+from matplotlib.figure import Figure
 import solara
 from solara.lab import task
 import solara.lab
+import seaborn as sns
+import matplotlib.pyplot as plt
+
 from simulation.scenario import CivilizationScenario
 from simulation.model import CivilizationModel
-# import seaborn as sns
 from pprint import pformat
 
 
@@ -27,7 +30,10 @@ def attribution_average_summary(model):
 
 
 @solara.component
-def TupleSlider(label, value, on_change, **kwargs):
+def TupleSlider(label:str, value:tuple[float, float], on_change, **kwargs):
+    """Slider component for a 2-tuple of floats; displays two sliders side-by-side.
+    `kwargs` are passed to `solara.SliderFloat`.
+    """
     x, y = value
 
     def set_x(new_x):
@@ -57,18 +63,25 @@ def TupleSlider(label, value, on_change, **kwargs):
                 on_value=set_y,
             )
 
-
+# setup the model using a Scenario
 scenario = solara.reactive(CivilizationScenario())
 model = solara.reactive(CivilizationModel(scenario=scenario.value))
+
+# dictionary of scenario attributes, for setting the initial state and holding the current
+# state of the scenario parameters
 _scenario_defaults = {k: v for k, v in scenario.value.to_dict().items() if k not in ['rng', 'model', '_scenario_id']}
+
+# state of the scenario
 scenario_params = solara.reactive(_scenario_defaults)
+
+# storage of the dataframes from previous runs to display in the tabs of results
 run_history = solara.reactive({})
 
 # map of scenario attributes to solara slider arguments
 scene_slider_args = {
     'population_initial_size': {
         'min':10,
-        'max':100,
+        'max':250,
         'step':10
     },
     'population_max_size': {
@@ -87,34 +100,94 @@ def ScenarioUI():
         solara.SliderInt(p, value=param, on_value=set_param, **p_args)
         scenario_params.value[p] = param
 
+    # sliders for traits
     for p in [k for k in _scenario_defaults.keys() if k.startswith('traits_')]:
-        aggression, set_aggression = solara.use_state(_scenario_defaults[p]) # noqa: SH103
-        scenario_params.value[p] = aggression
-        TupleSlider(f"{p} (avg, std_dev)", aggression, set_aggression, x_label='average', y_label='std_dev')
+        trait, set_trait = solara.use_state(_scenario_defaults[p]) # noqa: SH103
+        scenario_params.value[p] = trait
+        TupleSlider(f"{p} (avg, std_dev)", trait, set_trait, x_label='average', y_label='std_dev')
+
+
+@solara.component
+def some_histograms(data):
+    """Create charts from agent data.
+
+    Creates 4 subplots:
+    - Trait distribution (empathy histogram)
+    - Trait vs age scatter plot
+    - Social technology adoption rates
+    - Belief orientation over time
+    """
+    if data is None or data.empty:
+        return solara.Markdown("#No data to display yet")
+
+    # Create a fresh figure each time the component re-renders
+    fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+    # Trait distribution histogram
+    if 'empathy' in data.columns and 'age' in data.columns:
+        axes[0, 0].hist(data['empathy'], bins=20, alpha=0.7, edgecolor='black')
+        axes[0, 0].set_xlabel('Empathy')
+        axes[0, 0].set_ylabel('Count')
+        axes[0, 0].set_title('Empathy Distribution by Age')
+
+    # Scatter plot: traits vs age
+    if 'empathy' in data.columns and 'age' in data.columns:
+        axes[0, 1].scatter(data['age'], data['empathy'], alpha=0.5, s=10)
+        axes[0, 1].set_xlabel('Age (ticks)')
+        axes[0, 1].set_ylabel('Empathy')
+        axes[0, 1].set_title('Empathy Over Time')
+
+    # Social technology adoption rates
+    tech_cols = [c for c in data.columns if c.startswith('tech_')]
+    if tech_cols:
+        axes[1, 0].plot(data['Step'], data[tech_cols], linewidth=1)
+        axes[1, 0].set_xlabel('Step')
+        axes[1, 0].set_ylabel('Adoption Rate')
+        axes[1, 0].set_title('Social Technology Adoption Over Time')
+        axes[1, 0].legend(ncol=2, fontsize=8)
+
+    # Belief orientation changes
+    if 'attributor' in data.columns and 'modeler' in data.columns:
+        axes[1, 1].plot(data['Step'], data['attributor'], label='Attributor', linewidth=1)
+        axes[1, 1].plot(data['Step'], data['modeler'], label='Modeler', linewidth=1)
+        axes[1, 1].set_xlabel('Step')
+        axes[1, 1].set_ylabel('Fraction')
+        axes[1, 1].set_title('Belief Orientation Over Time')
+        axes[1, 1].legend()
+
+    plt.tight_layout()
+    return solara.FigureMatplotlib(fig)
 
 
 @task
 def run_model():
+    """Run the model in a coroutine until its end condition is reached
+    """
     m = model.value
     m.run_model()
-    print(f'houston, we have finished a run {m._scenario._scenario_id}')
-    run_history.value[m.scenario._scenario_id] = dict(
+    run_history.value[hash(m.scenario)] = dict(
         agents=m.datacollector.get_agent_vars_dataframe(),
         model=m.datacollector.get_model_vars_dataframe(),
     )
     return m
 
 
+@task
 def stop_model():
     model.value.running = False
 
 
+def reset_model():
+    """Resets the scenario and model variables based on the current state of the `scenario_params` map.
+    """
+    scenario.set(CivilizationScenario(**scenario_params.value))
+    model.set(CivilizationModel(scenario=scenario.value))
+    # d = model.value.datacollector.get_agent_vars_dataframe()
+    # agent_empathy_chart.set(sns.displot(data=d, x="age", y="empathy"))
+
+
 @solara.component
 def Page():
-
-    def reset_model():
-        scenario.set(CivilizationScenario(**scenario_params.value))
-        model.set(CivilizationModel(scenario=scenario.value))
 
     with solara.AppBar():
         solara.Button(
@@ -122,6 +195,13 @@ def Page():
             on_click=reset_model,
             disabled=run_model.pending,
             icon_name="mdi-restart-alert" if not run_model.pending else "mdi-restart-off"
+        )
+
+        solara.Button(
+            "Step",
+            on_click=model.value.step,
+            disabled=run_model.pending,
+            icon_name="mdi-debug-step-over"
         )
 
         solara.Button(
@@ -139,7 +219,7 @@ def Page():
         )
 
     with solara.Row():
-            solara.ProgressLinear(run_model.progress if run_model.pending else False)
+        solara.ProgressLinear(run_model.progress if run_model.pending else False)
 
     with solara.Sidebar():
         solara.Markdown("#Scenario Parameters")
@@ -159,9 +239,11 @@ def Page():
                         with solara.lab.Tabs(vertical=True):
                             with solara.lab.Tab("Model", icon_name="mdi-account"):
                                 solara.DataFrame(data['model'])
-                            with solara.lab.Tab("Agents", icon_name="mdi-access-point"):
+                            with solara.lab.Tab("Agents", icon_name="mdi-account-group"):
                                 solara.DataFrame(data['agents'])
-            with solara.Card("config"):
+                            with solara.lab.Tab("Charts", icon_name="mdi-chart-scatter"):
+                                some_histograms(data['agents'])
+            with solara.Card("Scenario"):
                 solara.Markdown(f'```{pformat(scenario_params.value, indent=2, width=40, sort_dicts=True)}```')
         with solara.Row():
             solara.Markdown("#Spacing")
