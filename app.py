@@ -1,4 +1,5 @@
 from matplotlib.figure import Figure
+from pandas import DataFrame
 import solara
 from solara.lab import task
 import solara.lab
@@ -108,55 +109,57 @@ def ScenarioUI():
 
 
 @solara.component
-def some_histograms(data):
-    """Create charts from agent data.
+def create_finished_civilization_charts(data_agents:DataFrame, data_model:DataFrame):
+    """Create charts from agent and model data.
 
-    Creates 4 subplots:
-    - Trait distribution (empathy histogram)
-    - Trait vs age scatter plot
+    Creates some subplots:
+    - empathy distribution (every human over all time)
     - Social technology adoption rates
-    - Belief orientation over time
+    - trait box plot
     """
-    if data is None or data.empty:
+    if data_agents is None or data_agents.empty:
         return solara.Markdown("#No data to display yet")
 
-    # Create a fresh figure each time the component re-renders
-    fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+    # Get social tech columns from model (tech_taboo, tech_religion, etc.)
+    tech_cols = [c for c in data_model.columns if c.startswith('tech_')]
 
-    # Trait distribution histogram
-    if 'empathy' in data.columns and 'age' in data.columns:
-        axes[0, 0].hist(data['empathy'], bins=20, alpha=0.7, edgecolor='black')
-        axes[0, 0].set_xlabel('Empathy')
-        axes[0, 0].set_ylabel('Count')
-        axes[0, 0].set_title('Empathy Distribution by Age')
+    # Create the figure
+    fig, axes = plt.subplots(3, 1, figsize=(14, 10))
+    axes = axes.flatten()
 
-    # Scatter plot: traits vs age
-    if 'empathy' in data.columns and 'age' in data.columns:
-        axes[0, 1].scatter(data['age'], data['empathy'], alpha=0.5, s=10)
-        axes[0, 1].set_xlabel('Age (ticks)')
-        axes[0, 1].set_ylabel('Empathy')
-        axes[0, 1].set_title('Empathy Over Time')
+    tech_subset = data_model[tech_cols]
+    sns.lineplot(data=tech_subset, ax=axes[0])
 
-    # Social technology adoption rates
-    tech_cols = [c for c in data.columns if c.startswith('tech_')]
-    if tech_cols:
-        axes[1, 0].plot(data['Step'], data[tech_cols], linewidth=1)
-        axes[1, 0].set_xlabel('Step')
-        axes[1, 0].set_ylabel('Adoption Rate')
-        axes[1, 0].set_title('Social Technology Adoption Over Time')
-        axes[1, 0].legend(ncol=2, fontsize=8)
+    sns.histplot(data_agents['empathy'], bins=10, ax=axes[1], kde=True, edgecolor='black')
+    axes[1].set_xlabel('Empathy')
+    axes[1].set_ylabel('Count')
+    axes[1].set_title('Empathy Distribution')
+    axes[1].grid(True, alpha=0.3)
 
-    # Belief orientation changes
-    if 'attributor' in data.columns and 'modeler' in data.columns:
-        axes[1, 1].plot(data['Step'], data['attributor'], label='Attributor', linewidth=1)
-        axes[1, 1].plot(data['Step'], data['modeler'], label='Modeler', linewidth=1)
-        axes[1, 1].set_xlabel('Step')
-        axes[1, 1].set_ylabel('Fraction')
-        axes[1, 1].set_title('Belief Orientation Over Time')
-        axes[1, 1].legend()
+    # commenting for now, but this did work, we just need to pass grid.figure to solara.FigureMatplotlib
+    # grid = sns.pairplot(data=data_model, vars=tech_cols, kind='kde')
+
+    sns.boxplot(data=data_agents[[
+        "curiosity",
+        "pattern_recognition",
+        "abstraction",
+        "memory_narrative",
+        "social_desire",
+        "dominance",
+        "empathy",
+        "trust",
+        "conformity",
+        "risk_tolerance",
+        "aggression",
+        "industriousness",
+        "patience",
+        "wonder",
+        "attribution_style",
+        "reverence",
+    ]], ax=axes[2])
 
     plt.tight_layout()
-    return solara.FigureMatplotlib(fig)
+    return solara.FigureMatplotlib(fig, dependencies=[data_model, data_agents])
 
 
 @task
@@ -182,8 +185,6 @@ def reset_model():
     """
     scenario.set(CivilizationScenario(**scenario_params.value))
     model.set(CivilizationModel(scenario=scenario.value))
-    # d = model.value.datacollector.get_agent_vars_dataframe()
-    # agent_empathy_chart.set(sns.displot(data=d, x="age", y="empathy"))
 
 
 @solara.component
@@ -239,10 +240,8 @@ def Page():
                         with solara.lab.Tabs(vertical=True):
                             with solara.lab.Tab("Model", icon_name="mdi-account"):
                                 solara.DataFrame(data['model'])
-                            with solara.lab.Tab("Agents", icon_name="mdi-account-group"):
-                                solara.DataFrame(data['agents'])
                             with solara.lab.Tab("Charts", icon_name="mdi-chart-scatter"):
-                                some_histograms(data['agents'])
+                                create_finished_civilization_charts(data['agents'], data['model'])
             with solara.Card("Scenario"):
                 solara.Markdown(f'```{pformat(scenario_params.value, indent=2, width=40, sort_dicts=True)}```')
         with solara.Row():
