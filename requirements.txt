@@ -2,5 +2,6 @@ mesa[rec]
 numpy
 pandas
 pyyaml
-networkx
 seaborn
+plotly[express]
+anywidget

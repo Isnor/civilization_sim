@@ -1,4 +1,5 @@
 .venv/
 .vscode/
+.claude/agent-memory/
 output/
 __pycache__/

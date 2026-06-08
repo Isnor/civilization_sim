@@ -77,6 +77,7 @@ class CivilizationScenario(Scenario):
     endgames_max_steps: int = 1000
 
 
+# this is defined so that we can uniquely identify runs. We only use it to name results tabs right now
 def __hash__(self):
     return sum([hash(a) for a in [
         self.population_initial_size,
