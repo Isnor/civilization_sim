@@ -5,7 +5,9 @@ import solara.lab
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-from analysis.chart_helpers import plot_belief_orientations_stacked, plot_tech_adoption, get_event_tick_series, plot_population_with_events, plot_trait_boxplot
+from analysis.chart_helpers import plot_belief_orientations_stacked, plot_tech_adoption, get_event_tick_series, plot_population_with_events, plot_trait_boxplot, plot_trait_distribution
+from analysis.collectors import _MODEL_TRAIT_REPORTERS
+from core.traits import TRAIT_NAMES
 from simulation.scenario import CivilizationScenario
 from simulation.model import CivilizationModel
 
@@ -136,14 +138,48 @@ def reset_model():
 
 
 @solara.component
-def create_finished_civilization_charts(data_agents:DataFrame, data_model:DataFrame):
+def create_trait_charts(data_model:DataFrame, data_agents: DataFrame):
+    fig, axs = plt.subplots(2, 1, figsize=(16, 16))
+    axs = axs.flatten()
+
+    ax = sns.lineplot(data=data_model[[f'avg_{r}' for r in _MODEL_TRAIT_REPORTERS]], ax=axs[0], linewidth=1.5, alpha=0.6)
+    ax.set_xlabel('Tick')
+    ax.set_ylabel('Average Trait Value')
+    ax.set_title('Trait Evolution Over Time')
+    ax.legend(loc='best', bbox_to_anchor=(1.05, 1), ncol=2)
+    ax.grid(True, alpha=0.3)
+
+    plot_trait_boxplot(axs[1], data_agents, TRAIT_NAMES)
+
+    # these take a lot of CPU/memory
+    # sns.kdeplot(data_agents, ax=axs[0], x="trust", y="empathy")
+    # sns.kdeplot(data_agents, ax=axs[0], x="wonder", y="reverence")
+    fig.tight_layout()
+    solara.FigureMatplotlib(fig, dependencies=[data_agents, data_model])
+
+
+@solara.component
+def create_trait_histograms(data_agents: DataFrame):
+    fig, axs = plt.subplots(4, 4, figsize=(16, 16))
+    fig.suptitle('Trait Distributions - All Agents', fontsize=16, y=1.0)
+
+    axs = axs.flatten()
+
+    for i in range(0, len(TRAIT_NAMES)):
+        ax = axs[i]
+        plot_trait_distribution(ax=ax, data_agents=data_agents, trait=TRAIT_NAMES[i])
+
+    fig.tight_layout()
+    solara.FigureMatplotlib(fig)
+
+@solara.component
+def create_overview_charts(data_agents:DataFrame, data_model:DataFrame):
     """Create comprehensive charts from agent and model data and display them in a solara.FigureMatplotlib.
 
     Creates a 4x2 subplot grid with the following charts:
     - Row 0: Population trends (left) + Belief orientation trends (right)
     - Row 1: Social technology adoption (left) + Event timeline (right)
     - Row 2: Trait evolution part 1 (left) + Trait evolution part 2 (right)
-    - Row 3: Empathy histogram (left) + Trait box plot (right)
     """
     if data_agents is None or data_agents.empty:
         return solara.Markdown("#No data to display yet")
@@ -151,9 +187,6 @@ def create_finished_civilization_charts(data_agents:DataFrame, data_model:DataFr
     # Get social tech columns and events from model
     tech_cols = [c for c in data_model.columns if c.startswith('tech_')]
     events = get_event_tick_series(model.value)
-
-    # Get all trait columns from model (avg_* columns)
-    trait_cols = [c for c in data_model.columns if c.startswith('avg_')]
 
     # Create a 2x2 subplot grid
     firstFewCharts, axes = plt.subplots(2, 2, figsize=(16, 14))
@@ -186,29 +219,8 @@ def create_finished_civilization_charts(data_agents:DataFrame, data_model:DataFr
     # Add overall figure title
     firstFewCharts.suptitle('Civilization Simulation Results', fontsize=16, y=1.0)
 
-    solara.FigureMatplotlib(firstFewCharts, dependencies=[data_model, data_agents])
-
-    secondFewCharts, secondChartAxes = plt.subplots(2, 1, figsize=(20, 10))
-    secondChartAxes = secondChartAxes.flatten()
-
-    ax = sns.lineplot(data=data_model[trait_cols], ax=secondChartAxes[0], linewidth=1.5, alpha=0.6)
-    ax.set_xlabel('Tick')
-    ax.set_ylabel('Trait Value')
-    ax.set_title('Trait Evolution Over Time')
-    ax.legend(loc='best', bbox_to_anchor=(1.05, 1), ncol=2)
-    ax.grid(True, alpha=0.3)
-    trait_cols_full = [
-        "curiosity", "pattern_recognition", "abstraction", "memory_narrative",
-        "social_desire", "dominance", "empathy", "trust", "conformity",
-        "risk_tolerance", "aggression", "industriousness", "patience",
-        "wonder", "attribution_style", "reverence"
-    ]
-
-    plot_trait_boxplot(secondChartAxes[1], data_agents, trait_cols_full)
-    plt.xticks(rotation=90)
-
     plt.tight_layout()
-    solara.FigureMatplotlib(secondFewCharts, dependencies=[data_model, data_agents])
+    solara.FigureMatplotlib(firstFewCharts, dependencies=[data_model, data_agents])
 
 
 @task
@@ -272,7 +284,10 @@ def Page():
                     with solara.lab.Tab(f"Run {run_id}", icon_name="mdi-beaker-outline"):
                         with solara.lab.Tabs(vertical=True):
                             with solara.lab.Tab("Overview", icon_name="mdi-chart-bar-stacked"):
-                                create_finished_civilization_charts(data['agents'], data['model'])
+                                create_overview_charts(data['agents'], data['model'])
+                            with solara.lab.Tab("Traits", icon_name="mdi-head-flash-outline"):
+                                create_trait_charts(data["model"], data["agents"])
+                                create_trait_histograms(data["agents"])
 
                 with solara.lab.Tab("Config", icon_name="mdi-code-tags"):
                     solara.Markdown(f"**Scenario Parameters**")
@@ -285,5 +300,5 @@ def Page():
                     solara.Markdown(f'**Trait Distributions**')
                     import pandas as pd
                     solara.Markdown(f'```{pd.DataFrame.from_dict(scenario_params.value, orient="index").to_string()}```')
-        with solara.Row():
-            solara.Markdown("#Spacing")
+        # with solara.Row():
+        #     solara.Markdown("#Spacing")
