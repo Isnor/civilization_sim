@@ -41,6 +41,14 @@ TRAIT_NAMES = [
     "reverence",
 ]
 
+# Trait categories for grouping visualizations
+TRAIT_CATEGORIES = {
+    "cognitive": ["curiosity", "pattern_recognition", "abstraction", "memory_narrative"],
+    "social": ["social_desire", "dominance", "empathy", "trust", "conformity"],
+    "survival": ["risk_tolerance", "aggression", "industriousness", "patience"],
+    "unknown": ["wonder", "attribution_style", "reverence"],
+}
+
 
 @dataclass
 class TraitVector:
