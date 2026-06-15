@@ -79,7 +79,7 @@ class CivilizationScenario(Scenario):
 
 # this is defined so that we can uniquely identify runs. We only use it to name results tabs right now
 def __hash__(self):
-    return sum([hash(a) for a in [
+    return sum(hash(a) for a in [
         self.population_initial_size,
         self.population_max_size,
         self.population_utility_fn,
@@ -117,4 +117,4 @@ def __hash__(self):
         self.heritability_variance,
         self.inspiration_probability,
         self.unknown_player_event_probability,
-    ]])
+    ])

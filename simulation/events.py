@@ -51,6 +51,7 @@ class UnknownPlayerEvent:
 
     @property
     def description(self) -> str:
+        """A formatted description of this event"""
         direction = "+" if self.resource_delta >= 0 else ""
         return f"{self.event_type} (Δresources {direction}{self.resource_delta:.2f})"
 

@@ -26,16 +26,18 @@ from pathlib import Path
 import yaml
 
 from simulation.model import CivilizationModel
-from analysis.collectors import export_csvs, export_events
 from simulation.scenario import CivilizationScenario
+from analysis.collectors import export_csvs, export_events
 
 
 def load_config(path: str) -> dict:
-    with open(path) as f:
+    """Load Scenario configuration from a file"""
+    with open(path, encoding="utf8") as f:
         return yaml.safe_load(f)
 
 
 def apply_overrides(config: dict, args: argparse.Namespace) -> dict:
+    """Apply Scenario configuration updates"""
     if args.ticks is not None:
         config["endgames_max_steps"] = args.ticks
     if args.seed is not None:
@@ -48,6 +50,7 @@ def apply_overrides(config: dict, args: argparse.Namespace) -> dict:
 
 
 def run(config: dict, quiet: bool = False) -> CivilizationModel:
+    """Run the model until it completes"""
     ticks = config["endgames_max_steps"]
     model = CivilizationModel(CivilizationScenario(**config))
 
@@ -69,7 +72,7 @@ def run(config: dict, quiet: bool = False) -> CivilizationModel:
 
         if not model.running:
             if not quiet:
-                print(f"\n  [!] Simulation finished: {model._endgame_condition_met}.")
+                print(f"\n  [!] Simulation finished: {model.endgame_met()}.")
             break
 
     if not quiet:
@@ -79,6 +82,7 @@ def run(config: dict, quiet: bool = False) -> CivilizationModel:
 
 
 def summarize(model: CivilizationModel) -> None:
+    """Print a summary of the completed model as text"""
     pop = model.living_count()
     groups = model.group_count()
     print(f"\n{'='*50}")
@@ -90,26 +94,27 @@ def summarize(model: CivilizationModel) -> None:
         return
 
     techs = ["taboo", "religion", "philosophy", "economy", "governance"]
-    print(f"\n  Social technology adoption:")
+    print("\n  Social technology adoption:")
     for tech in techs:
         pct = model.tech_adoption(tech) * 100
         print(f"    {tech:<14} {pct:5.1f}% of population")
 
-    print(f"\n  Belief orientations:")
+    print("\n  Belief orientations:")
     print(f"    Attributors    {model.attributor_fraction()*100:5.1f}%")
     print(f"    Modelers       {model.modeler_fraction()*100:5.1f}%")
     indiff = (1 - model.attributor_fraction() - model.modeler_fraction()) * 100
     print(f"    Indifferent    {indiff:5.1f}%")
 
-    print(f"\n  Avg traits (final population):")
+    print("\n  Avg traits (final population):")
     for trait in ["aggression", "empathy", "trust", "curiosity", "wonder", "social_desire"]:
         val = model.avg_trait(trait)
-        bar = "█" * int(val * 20)
-        print(f"    {trait:<20} {val:.3f}  {bar}")
+        segment = "█" * int(val * 20)
+        print(f"    {trait:<20} {val:.3f}  {segment}")
     print(f"{'='*50}")
 
 
 def main() -> None:
+    """CLI for running Civilization Simulation experiments"""
     parser = argparse.ArgumentParser(description="Civilization emergence simulator")
     parser.add_argument("--config", default="config/default.yaml", help="Path to config YAML")
     parser.add_argument("--ticks", type=int, default=None)
@@ -129,12 +134,12 @@ def main() -> None:
     config = apply_overrides(config, args)
 
     if not args.quiet:
-        print(f"civilization_sim")
-        print(f"  config   : {config_path}")
-        print(f"  ticks    : {config['endgames_max_steps']}")
-        print(f"  pop      : {config['population_initial_size']}")
-        print(f"  utility  : {config['population_utility_fn']}")
-        print(f"  seed     : {config.get('rng', 'random')}")
+        print("civilization_sim")
+        print(f"	config   : {config_path}")
+        print(f"	ticks    : {config['endgames_max_steps']}")
+        print(f"	pop      : {config['population_initial_size']}")
+        print(f"	utility  : {config['population_utility_fn']}")
+        print(f"	seed     : {config.get('rng', 'random')}")
         print()
 
     model = run(config, quiet=args.quiet)
@@ -143,15 +148,15 @@ def main() -> None:
         summarize(model)
 
     if args.write_output:
-      output_dir = config["output_dir"]
-      model_csv, agent_csv = export_csvs(model, output_dir)
-      events_csv = export_events(model, output_dir)
+        output_dir = config["output_dir"]
+        model_csv, agent_csv = export_csvs(model, output_dir)
+        events_csv = export_events(model, output_dir)
 
-      if not args.quiet:
-          print(f"\n  Output written to: {output_dir}/")
-          print(f"    {model_csv}")
-          print(f"    {agent_csv}")
-          print(f"    {events_csv}")
+        if not args.quiet:
+            print(f"\n  Output written to: {output_dir}/")
+            print(f"    {model_csv}")
+            print(f"    {agent_csv}")
+            print(f"    {events_csv}")
 
 
 if __name__ == "__main__":

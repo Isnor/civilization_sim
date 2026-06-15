@@ -29,6 +29,7 @@ from core.traits import TraitVector, inherit_traits, drift_traits, spontaneous_i
 from core.beliefs import BeliefSystem
 from core.groups import RelationshipState
 from simulation.scenario import CivilizationScenario
+from core.social_tech import get_active_effects
 
 ACTIONS = ["forage", "rest", "socialize", "compete", "contemplate"]
 
@@ -408,7 +409,6 @@ class Player(mesa.Agent[mesa.Model[mesa.Agent, CivilizationScenario]]):
 
     def _get_active_effects(self) -> dict:
         """Retrieve stacked social technology effects for this agent's groups."""
-        from core.social_tech import get_active_effects
         active_techs: set[str] = set()
         for gid in self.group_ids:
             group = self.model.groups.get(gid)
