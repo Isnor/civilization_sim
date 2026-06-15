@@ -1,8 +1,11 @@
+"""
+chart_helpers defines several Axes-level plotting functions that use matplotlib and seaborn
+to chart dataframes for analyzing experiments.
+"""
 from pandas import DataFrame
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
-import numpy as np
 
 
 # Helper function: Plot stacked area for belief orientations
@@ -148,4 +151,3 @@ def plot_population_with_events(ax, data_model, events):
     # Annotate events
     if len(events) > 0:
         annotate_events(ax, events, y_max=1.0)
-

@@ -91,23 +91,29 @@ class Group:
     tech_tick: int = 0
 
     def add_member(self, agent_id: int) -> None:
+        """Add an agent to this group"""
         self.members.add(agent_id)
 
     def remove_member(self, agent_id: int) -> None:
+        """Remove an agent from this group"""
         self.members.discard(agent_id)
         if self.dominant_voice_id == agent_id:
             self.dominant_voice_id = None
 
     def size(self) -> int:
+        """The number of members in this group"""
         return len(self.members)
 
     def is_empty(self) -> bool:
+        """Whether or not this group has any members"""
         return len(self.members) == 0
 
     def has_technology(self, tech: str) -> bool:
+        """Whether or not this group has a given social technology `tech`"""
         return tech in self.social_technologies
 
     def activate_technology(self, tech: str) -> None:
+        """Add a social technology to this group"""
         self.social_technologies.add(tech)
 
     def elect_dominant_voice(self, agents_by_id: dict) -> None:

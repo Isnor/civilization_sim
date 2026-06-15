@@ -151,7 +151,10 @@ class BeliefSystem:
                 self.orientation = other_belief.orientation
 
     def accept_norm(self, norm: str) -> None:
+        """Add an 'accepted norm' to this Belief System. Agents with like belief systems
+        will obey these norms"""
         self.shared_norms.add(norm)
 
     def has_norm(self, norm: str) -> bool:
+        """Whether or not this Belief System accepts `norm` as a 'social convention'/'accepted norm'"""
         return norm in self.shared_norms

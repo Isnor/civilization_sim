@@ -324,24 +324,29 @@ class CivilizationModel(mesa.Model[mesa.Agent, CivilizationScenario]):
     # ------------------------------------------------------------------
 
     def living_count(self) -> int:
+        """The number of living agents in the model"""
         return sum(1 for a in self.agents if a.alive)
 
     def group_count(self) -> int:
+        """The number of active, distinct groups in the model."""
         return len(self.groups)
 
     def avg_trait(self, trait_name: str) -> float:
+        """The mean of a `trait_name` for all living agents"""
         living = [a for a in self.agents if a.alive]
         if not living:
             return 0.0
         return float(np.mean([a.current_traits.get(trait_name) for a in living]))
 
     def attributor_fraction(self) -> float:
+        """Fraction of living agents whose belief orientation is 'attributor'"""
         living = [a for a in self.agents if a.alive]
         if not living:
             return 0.0
         return sum(1 for a in living if a.beliefs.orientation == "attributor") / len(living)
 
     def modeler_fraction(self) -> float:
+        """Fraction of living agents whose belief orientation is 'modeler'"""
         living = [a for a in self.agents if a.alive]
         if not living:
             return 0.0
@@ -360,6 +365,10 @@ class CivilizationModel(mesa.Model[mesa.Agent, CivilizationScenario]):
             )
         )
         return count / len(living)
+
+    def endgame_met(self) -> str:
+        """Returns the endgame that this model completed with or None if the model is not finished"""
+        return self._endgame_condition_met or None
 
 
 def max_population_endgame(model: CivilizationModel)-> bool:

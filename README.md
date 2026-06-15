@@ -44,6 +44,8 @@ pip install -r requirements.txt
 
 `solara run app.py`
 
+See the [wiki](https://github.com/Isnor/civilization_sim/wiki/Solara) to learn how to use the webapp to configure, run, and analyze different scenarios.
+
 ### CLI
 
 ```bash
