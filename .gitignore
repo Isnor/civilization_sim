@@ -1,5 +1,11 @@
 .venv/
 .vscode/
 .claude/agent-memory/
+**/*.egg-info/
+src/*.egg-info/
 output/
+build/
 __pycache__/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/

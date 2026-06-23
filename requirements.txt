@@ -1,6 +1,0 @@
-mesa[all]
-pandas
-numpy
-pyyaml
-seaborn
-anywidget

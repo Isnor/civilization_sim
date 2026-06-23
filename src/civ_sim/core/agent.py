@@ -25,11 +25,11 @@ from __future__ import annotations
 import mesa
 import numpy as np
 
-from core.traits import TraitVector, inherit_traits, drift_traits, spontaneous_inspiration
-from core.beliefs import BeliefSystem
-from core.groups import RelationshipState
-from simulation.scenario import CivilizationScenario
-from core.social_tech import get_active_effects
+from civ_sim.core.traits import TraitVector, inherit_traits, drift_traits, spontaneous_inspiration
+from civ_sim.core.beliefs import BeliefSystem
+from civ_sim.core.groups import RelationshipState
+from civ_sim.simulation.scenario import CivilizationScenario
+from civ_sim.core.social_tech import get_active_effects
 
 ACTIONS = ["forage", "rest", "socialize", "compete", "contemplate"]
 
@@ -331,7 +331,7 @@ class Player(mesa.Agent[mesa.Model[mesa.Agent, CivilizationScenario]]):
 
     def _record_experience(self, trait_name: str, delta: float) -> None:
         """Accumulate an experience delta for a named trait."""
-        from core.traits import TRAIT_NAMES
+        from civ_sim.core.traits import TRAIT_NAMES
         if trait_name in TRAIT_NAMES:
             idx = TRAIT_NAMES.index(trait_name)
             self._experience_deltas[idx] += delta

@@ -25,9 +25,9 @@ from pathlib import Path
 
 import yaml
 
-from simulation.model import CivilizationModel
-from simulation.scenario import CivilizationScenario
-from analysis.collectors import export_csvs, export_events
+from civ_sim.simulation.model import CivilizationModel
+from civ_sim.simulation.scenario import CivilizationScenario
+from civ_sim.analysis.collectors import export_csvs, export_events
 
 
 def load_config(path: str) -> dict:
