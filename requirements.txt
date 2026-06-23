@@ -1,7 +1,6 @@
-mesa[rec]
-numpy
+mesa[all]
 pandas
+numpy
 pyyaml
 seaborn
-plotly[express]
 anywidget
