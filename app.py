@@ -181,9 +181,9 @@ def create_trait_histograms(data_agents: DataFrame):
 
     axs = axs.flatten()
 
-    for i in TRAIT_NAMES:
+    for i in range(0, len(TRAIT_NAMES)):
         ax = axs[i]
-        plot_trait_distribution(ax=ax, data_agents=data_agents, trait=i)
+        plot_trait_distribution(ax=ax, data_agents=data_agents, trait=TRAIT_NAMES[i])
 
     fig.tight_layout()
     solara.FigureMatplotlib(fig)
