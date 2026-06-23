@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "civ-sim"
+version = "0.0.1"
+description = "An agent-based civilization simulation using Mesa ABM framework"
+readme = { file = "README.md", content-type = "text/markdown" }
+license = "MIT"
+requires-python = ">=3.10,<4a"
+authors = [
+  { name = "James Isnor" },
+]
+keywords = ["agent-based modeling", "simulation", "mesa", "civilization", "emergence"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Simulation",
+]
+dependencies = [
+  # Core dependencies
+  "Mesa[rec]>=3.5",      # mesa ABM framework
+  "numpy>=1.24",           # Numerical operations, array handling
+  "pandas>=2.0",           # DataFrames for agent/model state tracking
+  "pyyaml>=6.0",           # Configuration file parsing (.yaml)
+
+  # Visualization and dashboarding
+  "seaborn>=0.13",         # Statistical visualizations, plot compatibility with matplotlib base
+
+]
+
+
+[tool.setuptools.packages.find]
+where = ["src"]

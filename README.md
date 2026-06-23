@@ -26,12 +26,12 @@ Which trait combinations lead to religion, philosophy, or conquest? Can peaceful
 # Clone or download the project
 cd civilization_sim
 
-# Create a virtual environment (Python 3.10+ recommended)
+# Create a virtual environment (Python 3.10+ required)
 python3 -m venv .venv
 source .venv/bin/activate
 
 # Install dependencies
-pip install -r requirements.txt
+pip install .
 ```
 
 ---

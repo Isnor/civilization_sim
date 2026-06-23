@@ -19,14 +19,14 @@ from typing import Callable, Dict
 import mesa
 import numpy as np
 
-from core.agent import Player
-from core.groups import Group
-from core.social_tech import REGISTRY, compute_group_avg_traits
-from core.traits import random_traits
-from simulation.scenario import (
+from civ_sim.core.agent import Player
+from civ_sim.core.groups import Group
+from civ_sim.core.social_tech import REGISTRY, compute_group_avg_traits
+from civ_sim.core.traits import random_traits
+from civ_sim.simulation.scenario import (
     CivilizationScenario,
 )
-from simulation.events import (
+from civ_sim.simulation.events import (
     UnknownPlayerEvent,
     maybe_generate_event,
     apply_event,
@@ -66,7 +66,7 @@ class CivilizationModel(mesa.Model[mesa.Agent, CivilizationScenario]):
         self._spawn_initial_population()
 
         # Data collector (initialized after agents exist)
-        from analysis.collectors import make_data_collector
+        from civ_sim.analysis.collectors import make_data_collector
         self.datacollector = make_data_collector()
         self.datacollector.collect(self)
 

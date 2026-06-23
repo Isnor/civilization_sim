@@ -165,7 +165,7 @@ def compute_group_avg_traits(member_agents: list) -> dict[str, float]:
     """Compute average current_trait values across a list of agents."""
     if not member_agents:
         return {}
-    from core.traits import TRAIT_NAMES
+    from civ_sim.core.traits import TRAIT_NAMES
     totals: dict[str, float] = {name: 0.0 for name in TRAIT_NAMES}
     for agent in member_agents:
         for name in TRAIT_NAMES:

@@ -5,7 +5,7 @@ Scenario for the CivilizationModel.
 
 from typing import List
 from mesa.experimental.scenarios import Scenario
-from simulation.events import (
+from civ_sim.simulation.events import (
     EVENT_TYPES,
 )
 

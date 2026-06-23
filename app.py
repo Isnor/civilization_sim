@@ -9,7 +9,7 @@ import solara.lab
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-from analysis.chart_helpers import (
+from civ_sim.analysis.chart_helpers import (
     plot_belief_orientations_stacked,
     plot_tech_adoption,
     get_event_tick_series,
@@ -17,10 +17,10 @@ from analysis.chart_helpers import (
     plot_trait_boxplot,
     plot_trait_distribution
 )
-from analysis.collectors import _MODEL_TRAIT_REPORTERS
-from core.traits import TRAIT_NAMES
-from simulation.scenario import CivilizationScenario
-from simulation.model import CivilizationModel
+from civ_sim.analysis.collectors import _MODEL_TRAIT_REPORTERS
+from civ_sim.core.traits import TRAIT_NAMES
+from civ_sim.simulation.scenario import CivilizationScenario
+from civ_sim.simulation.model import CivilizationModel
 
 
 @solara.component
