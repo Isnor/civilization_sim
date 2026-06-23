@@ -8,7 +8,7 @@ version = "0.0.1"
 description = "An agent-based civilization simulation using Mesa ABM framework"
 readme = { file = "README.md", content-type = "text/markdown" }
 license = "MIT"
-requires-python = ">=3.10,<4a"
+requires-python = ">=3.12,<4a"
 authors = [
   { name = "James Isnor" },
 ]
@@ -17,8 +17,6 @@ classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
     "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Simulation",
 ]
