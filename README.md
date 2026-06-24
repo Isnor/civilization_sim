@@ -1,5 +1,7 @@
 # civilization_sim
 
+[![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Isnor/civilization_sim/blob/main/civ_sim.ipynb)
+
 A Python agent-based simulation exploring how human cultures emerge from individual traits, social dynamics, and group behavior.
 
 This is a tool to try to help understand *why do cultures diverge even when starting conditions are similar?*
