@@ -20,7 +20,9 @@ Which trait combinations lead to religion, philosophy, or conquest? Can peaceful
 
 ---
 
-## Setup
+## Installation
+
+Installation can be skipped if you only want to run civ_sim without downloading or installing anything by opening the notebook in Google Colab.
 
 ```bash
 # Clone or download the project
@@ -38,7 +40,11 @@ pip install .
 
 ## Usage
 
-### Live Dashboard
+### Jupyter notebook
+
+There is a notebook `civ_sim.ipynb` that can be run with Jupyter.
+
+### Web App
 
 [Solara](https://solara.dev/) is used to create a simple webapp to configure, run, and visualize different Civilization experiments. To run this project as a Solara app, run:
 
