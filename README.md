@@ -124,7 +124,7 @@ Run `--ticks 1000` and watch for collapses. What trait distributions tend to pre
 
 ## Theoretical Foundations
 
-The simulation is built on a set of ideas from evolutionary game theory, social science, and philosophy, none of which I have formal education on.
+The simulation is built on a set of ideas from evolutionary game theory, social science, and philosophy, none of which I have formal education on. **All of this research was conducted using AI tools**.
 
 ### Evolutionary Game Theory
 
