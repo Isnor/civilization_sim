@@ -4,10 +4,6 @@ A Python agent-based simulation exploring how human cultures emerge from individ
 
 This is a tool to try to help understand *why do cultures diverge even when starting conditions are similar?*
 
-## AI Disclosure
-
-I consulted the great Oracle when creating this, the irony of which is not lost on me. I did what I could to use and reference existing research and document all of the choices made, but all of it was recommended reading per the Great Giver of Knowledge, as was the decision to use agent-based modeling.
-
 ---
 
 ## Goals
@@ -20,114 +16,15 @@ Which trait combinations lead to religion, philosophy, or conquest? Can peaceful
 
 ---
 
-## Installation
-
-Installation can be skipped if you only want to run civ_sim without downloading or installing anything by opening the notebook in Google Colab.
-
-```bash
-# Clone or download the project
-cd civilization_sim
-
-# Create a virtual environment (Python 3.12+ required)
-python3 -m venv .venv
-source .venv/bin/activate
-
-# Install dependencies
-pip install .
-```
-
----
-
 ## Usage
 
-### Jupyter notebook
-
-There is a notebook `civ_sim.ipynb` that can be run with Jupyter.
-
-### Web App
-
-[Solara](https://solara.dev/) is used to create a simple webapp to configure, run, and visualize different Civilization experiments. To run this project as a Solara app, run:
-
-`solara run app.py`
-
-See the [wiki](https://github.com/Isnor/civilization_sim/wiki/Solara) to learn how to use the webapp to configure, run, and analyze different scenarios.
-
-### CLI
-
-```bash
-python main.py
-```
-
-Runs 300 ticks with 100 starting agents. Outputs CSV files to `output/default/`.
-
-### Common options
-
-```bash
-# Specify number of ticks
-python main.py --ticks 500
-
-# Set a random seed for reproducibility
-python main.py --seed 42
-
-# Use the enlightenment utility function
-python main.py --utility enlightenment --output output/enlightenment
-
-# Point to a custom config
-python main.py --config config/my_experiment.yaml
-
-# Quiet mode (no progress output)
-python main.py --quiet
-```
-
-### Experiment workflow
-
-The recommended way to explore the simulation is to create config variants:
-
-```bash
-cp config/default.yaml config/aggressive.yaml
-# Edit config/aggressive.yaml: set aggression mean to 0.75, empathy mean to 0.25
-python main.py --config config/aggressive.yaml --output output/aggressive --seed 42
-
-# Compare against baseline with same seed
-python main.py --seed 42 --output output/baseline
-```
-
-### Output files
-
-All runs produce three CSVs in the output directory:
-
-| File | Contents |
-|---|---|
-| `model_data.csv` | One row per tick: population, group count, average traits, social technology adoption rates, belief orientation fractions |
-| `agent_data.csv` | One row per agent per tick: all 16 traits, resources, age, last action, metagame, belief orientation |
-| `events.csv` | One row per Unknown Player event: tick, type, magnitude, resource effect |
-
-These are designed to be loaded into any analysis tool (pandas, R, Excel, a Jupyter notebook).
-
-### Quick analysis example
-
-```python
-import pandas as pd
-import matplotlib.pyplot as plt
-
-m = pd.read_csv("output/default/model_data.csv", index_col=0)
-
-fig, axes = plt.subplots(2, 2, figsize=(12, 8))
-
-m["population"].plot(ax=axes[0,0], title="Population")
-m[["tech_taboo","tech_religion","tech_economy","tech_governance","tech_philosophy"]].plot(
-    ax=axes[0,1], title="Social Technology Adoption"
-)
-m[["attributors","modelers"]].plot(ax=axes[1,0], title="Belief Orientations")
-m[["avg_aggression","avg_empathy","avg_trust"]].plot(ax=axes[1,1], title="Key Trait Averages")
-
-plt.tight_layout()
-plt.savefig("output/default/summary.png")
-```
+Please see the [repository wiki](https://github.com/Isnor/civilization_sim/wiki/Civ-Sim) for usage instructions.
 
 ---
 
 ## Core Design Decisions
+
+This section contains a brief overview of the internals of the simulation. If you want to read more about how these decisions were made, I talk about that in the [civ_sim blog post on my website](https://hire-james.isnor.ca/civilization-sim/).
 
 The foundation of this simulation is the idea that humans contain the capacity for growth, change, and evolution. The simulation models this as **traits**: characteristics that make people who they are that shift over time as they mature. This is represented as two vectors: one of traits that humans are born with, largely based on their parents' traits; and another vector of current traits, which is their base traits modified by their life (*trait drift*).
 
